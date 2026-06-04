@@ -987,7 +987,8 @@
 
   function fecharAdmin() {
     document.getElementById('admin').style.display = 'none';
-    location.reload();
+    document.getElementById('gate').style.display = 'none';
+    document.body.classList.remove('gated');
   }
 
   // (acesso ao admin agora é por 5 toques na logo)
