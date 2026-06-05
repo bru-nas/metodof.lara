@@ -18,10 +18,9 @@ export default {
       const body = await request.json();
       const isDemo = body._demo === true;
 
-      // ── DEMO: bloqueia por IP ──
       if (isDemo) {
         const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-        const key = `demo_ip_${ip}`;
+        const key = 'demo_ip_' + ip;
         const jaUsou = await env.DEMO_KV.get(key);
         if (jaUsou) {
           return new Response(JSON.stringify({ _demo_bloqueado: true }), {
@@ -29,27 +28,22 @@ export default {
             headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
           });
         }
-        await env.DEMO_KV.put(key, '1', { expirationTtl: 60 * 60 * 24 * 30 });
+        await env.DEMO_KV.put(key, '1', { expirationTtl: 2592000 });
       }
 
-      // ── ALERTA DE DEVICE ──
       const senha = body._senha || null;
       const deviceId = body._device || null;
       let deviceAlerta = false;
 
       if (senha && deviceId && !isDemo) {
-        const deviceKey = `device_${senha}`;
+        const deviceKey = 'device_' + senha;
         const deviceSalvo = await env.DEMO_KV.get(deviceKey);
         if (!deviceSalvo) {
           await env.DEMO_KV.put(deviceKey, deviceId);
         } else if (deviceSalvo !== deviceId) {
-          const alertaKey = `alerta_${senha}`;
-          await env.DEMO_KV.put(alertaKey, JSON.stringify({
-            senha,
-            deviceOriginal: deviceSalvo,
-            deviceNovo: deviceId,
-            ip: request.headers.get('CF-Connecting-IP') || 'unknown',
-            quando: new Date().toISOString()
+          await env.DEMO_KV.put('alerta_' + senha, JSON.stringify({
+            quando: new Date().toISOString(),
+            ip: request.headers.get('CF-Connecting-IP') || 'unknown'
           }));
           deviceAlerta = true;
         }
