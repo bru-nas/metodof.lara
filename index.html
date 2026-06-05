@@ -579,6 +579,33 @@
     opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 1200; max-width: 90%; text-align: center;
   }
 
+  /* banca */
+  .admin-banca-head {
+    font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--magenta); margin: 28px 0 12px;
+  }
+  .admin-banca-box {
+    background: #fff7fa; border: 1px solid var(--rosa-borda); border-radius: 16px; padding: 20px;
+  }
+  .admin-banca-hint { font-size: 13px; color: var(--texto-suave); margin-bottom: 16px; line-height: 1.5; }
+  .banca-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .banca-card {
+    border: 2px solid var(--rosa-borda); border-radius: 12px; padding: 14px 12px;
+    text-align: center; cursor: pointer; background: #fff; transition: all 0.18s;
+  }
+  .banca-card:hover { border-color: var(--rosa-vivo); transform: translateY(-1px); }
+  .banca-card.ativa { border-color: var(--magenta); background: rgba(156,15,72,0.06); }
+  .banca-card-nome { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 700; color: var(--vinho); }
+  .banca-card-desc { font-size: 11px; color: var(--texto-suave); margin-top: 4px; }
+  .banca-card.ativa .banca-card-nome { color: var(--magenta); }
+  .banca-custom { margin-top: 4px; }
+  .banca-ativa-display {
+    margin-top: 16px; padding: 14px 16px;
+    background: linear-gradient(100deg, rgba(156,15,72,0.08), rgba(217,165,102,0.08));
+    border-radius: 10px; border: 1px solid var(--rosa-borda);
+    font-size: 13.5px; color: var(--texto); line-height: 1.5; min-height: 20px;
+  }
+
   @media (max-width: 560px) {
     .admin-fields { grid-template-columns: 1fr; }
     .admin-metrics { gap: 8px; }
@@ -605,6 +632,25 @@
     display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
     color: var(--dourado); background: rgba(217,165,102,0.14); padding: 5px 14px; border-radius: 99px; margin-bottom: 16px;
   }
+
+  .demo-ponto { padding: 16px; border-radius: 12px; margin-top: 4px; }
+  .demo-ponto.positivo { background: rgba(31,157,85,0.07); border: 1px solid rgba(31,157,85,0.2); }
+  .demo-ponto.negativo { background: rgba(156,15,72,0.06); border: 1px solid var(--rosa-borda); }
+  .demo-ponto-titulo { font-weight: 700; font-size: 15px; color: var(--texto); margin-bottom: 6px; }
+  .demo-ponto-detalhe { font-size: 14px; color: var(--texto-suave); line-height: 1.6; margin-bottom: 10px; }
+  .demo-ponto-cta { font-size: 13px; font-style: italic; color: var(--magenta); font-weight: 600; }
+
+  .demo-ig {
+    display: flex; align-items: center; gap: 14px;
+    background: linear-gradient(100deg, #833ab4, #fd1d1d, #fcb045);
+    border-radius: 14px; padding: 16px 20px; margin: 18px 0;
+    text-decoration: none; color: #fff; transition: transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 8px 24px -8px rgba(131,58,180,0.5);
+  }
+  .demo-ig:hover { transform: translateY(-2px); box-shadow: 0 12px 30px -8px rgba(131,58,180,0.6); }
+  .demo-ig-icon { font-size: 28px; flex-shrink: 0; }
+  .demo-ig strong { font-size: 16px; font-weight: 700; display: block; }
+  .demo-ig small { font-size: 13px; opacity: 0.88; }
 
   @media (max-width: 600px) {
     .nota-banner { flex-direction: column; gap: 14px; align-items: flex-start; padding: 30px 24px; }
@@ -667,6 +713,17 @@
 
       <div class="admin-list-head">Assinantes</div>
       <div class="admin-list" id="admin-lista"></div>
+
+      <div class="admin-banca-head">🎯 Banca Ativa</div>
+      <div class="admin-banca-box">
+        <p class="admin-banca-hint">Selecione qual banca o app está corrigindo agora. A IA vai buscar automaticamente os critérios e pesos atuais na internet.</p>
+        <div class="banca-grid" id="banca-grid"></div>
+        <div class="banca-custom">
+          <input class="admin-input" id="banca-custom-nome" placeholder="Outra banca (ex: FUVEST, UNICAMP...)">
+          <button class="admin-add" style="margin-top:10px;" onclick="addBancaCustom()">+ Adicionar banca</button>
+        </div>
+        <div class="banca-ativa-display" id="banca-ativa-display"></div>
+      </div>
     </div>
     <div id="copy-toast" class="copy-toast"></div>
   </div>
@@ -694,7 +751,7 @@
       <div class="step-num"><span>1</span> Cole o tema da redação</div>
       <div class="form-section">
         <label class="form-label" for="tema">Tema proposto</label>
-        <span class="form-hint">O enunciado ou a proposta que você recebeu</span>
+        <span class="form-hint">O enunciado ou a proposta que você recebeu · <span id="banca-label-form" style="color:var(--magenta);font-weight:700;"></span></span>
         <textarea id="tema" rows="3" placeholder="Ex: A crise hídrica no Brasil e seus impactos sociais..."></textarea>
       </div>
 
@@ -862,11 +919,64 @@
     gate.style.opacity = '0';
     setTimeout(() => { gate.style.display = 'none'; }, 500);
     document.body.classList.remove('gated');
+    // mostra banca ativa no formulário
+    const el = document.getElementById('banca-label-form');
+    if (el) el.textContent = 'Banca: ' + getBancaAtiva();
   }
 
   // ════════════════════════════════════════════════════════════
-  // 🔐 PAINEL DE ADMINISTRAÇÃO — assinaturas
+  // 🎯 BANCA ATIVA
   // ════════════════════════════════════════════════════════════
+  const BANCAS_DEFAULT = [
+    { id: 'UFG',  nome: 'UFG',  desc: 'CS-UFG · 24 pts' },
+    { id: 'UEG',  nome: 'UEG',  desc: 'Vest. Estadual GO' },
+    { id: 'ENEM', nome: 'ENEM', desc: '5 competências · 1000 pts' },
+    { id: 'FUVEST', nome: 'FUVEST', desc: 'Vest. USP' },
+    { id: 'UNICAMP', nome: 'UNICAMP', desc: 'Vest. Unicamp' },
+  ];
+
+  function carregarBancas() {
+    try {
+      const extra = JSON.parse(localStorage.getItem('flara_bancas_custom') || '[]');
+      return [...BANCAS_DEFAULT, ...extra];
+    } catch { return BANCAS_DEFAULT; }
+  }
+
+  function getBancaAtiva() {
+    return localStorage.getItem('flara_banca_ativa') || 'UFG';
+  }
+
+  function setBancaAtiva(id) {
+    localStorage.setItem('flara_banca_ativa', id);
+    renderBancas();
+    mostrarToast(`✓ Banca ativa: ${id}`);
+  }
+
+  function addBancaCustom() {
+    const nome = document.getElementById('banca-custom-nome').value.trim().toUpperCase();
+    if (!nome) { alert('Digite o nome da banca.'); return; }
+    const extras = JSON.parse(localStorage.getItem('flara_bancas_custom') || '[]');
+    if (carregarBancas().some(b => b.id === nome)) { alert('Essa banca já existe.'); return; }
+    extras.push({ id: nome, nome, desc: 'Banca personalizada' });
+    localStorage.setItem('flara_bancas_custom', JSON.stringify(extras));
+    document.getElementById('banca-custom-nome').value = '';
+    renderBancas();
+    setBancaAtiva(nome);
+  }
+
+  function renderBancas() {
+    const ativa = getBancaAtiva();
+    const bancas = carregarBancas();
+    document.getElementById('banca-grid').innerHTML = bancas.map(b => `
+      <div class="banca-card ${b.id === ativa ? 'ativa' : ''}" onclick="setBancaAtiva('${b.id}')">
+        <div class="banca-card-nome">${b.nome}</div>
+        <div class="banca-card-desc">${b.desc}</div>
+      </div>`).join('');
+    const bancaObj = bancas.find(b => b.id === ativa) || bancas[0];
+    document.getElementById('banca-ativa-display').innerHTML =
+      `✦ Banca ativa agora: <strong>${bancaObj.nome}</strong> — ${bancaObj.desc}<br>
+       <span style="font-size:12px;color:var(--texto-suave)">A IA vai buscar os critérios e pesos atuais desta banca na internet antes de corrigir.</span>`;
+  }
   const PLANOS = {
     'Mensal':     { dias: 30,  label: 'Mensal (30 dias)' },
     'Trimestral': { dias: 90,  label: 'Trimestral (90 dias)' },
@@ -878,6 +988,7 @@
     document.getElementById('gate').style.display = 'none';
     document.body.classList.add('gated');
     renderAdmin();
+    renderBancas();
   }
 
   function gerarSenha(nome) {
@@ -1068,9 +1179,31 @@
     startLoading();
 
     try {
-      const systemPrompt = `Você é um corretor especialista em redações de vestibular da UFG (Universidade Federal de Goiás / CS-UFG / Instituto Verbena). Avalie a redação sob DOIS olhares simultâneos e compare:
+      const bancaAtiva = getBancaAtiva();
+      const systemPrompt = modoDemo
+        ? `Você é um corretor especialista em redações de vestibular. A banca avaliada é: ${bancaAtiva}.
 
-1. CRIVO OFICIAL DA UFG: Use os critérios e pesos do edital mais recente que encontrar. Gênero dissertativo-argumentativo. Nota máxima: 24 pontos. Abaixo de 10 é desclassificatório.
+Faça uma análise RÁPIDA da redação (modo demonstração gratuita). Identifique apenas:
+- 1 ponto positivo genuíno (algo que o aluno já faz bem, de acordo com o crivo da ${bancaAtiva})
+- 1 ponto negativo principal (o maior problema a melhorar, de acordo com o crivo da ${bancaAtiva})
+
+Use linguagem encorajadora e motivadora para um aluno do ensino médio.
+
+RESPONDA APENAS com JSON válido, sem markdown, sem cercas:
+{
+  "nota_total": <número estimado>,
+  "nota_max": <nota máxima da banca ${bancaAtiva}>,
+  "banca": "${bancaAtiva}",
+  "veredito": "frase curta encorajadora",
+  "positivo": {"titulo": "título do ponto positivo", "detalhe": "explicação encorajadora de 2-3 linhas"},
+  "negativo": {"titulo": "título do ponto a melhorar", "detalhe": "explicação motivadora de 2-3 linhas"}
+}`
+        : `Você é um corretor especialista em redações de vestibular. A banca a ser avaliada AGORA é: ${bancaAtiva}.
+
+Antes de corrigir, USE A BUSCA NA INTERNET para encontrar os critérios, competências e pesos ATUAIS da banca ${bancaAtiva}. Se não encontrar, use seu conhecimento mais recente sobre ela.
+
+Avalie a redação sob DOIS olhares simultâneos e compare:
+1. CRIVO OFICIAL DA ${bancaAtiva}: use os critérios e pesos do edital mais recente que encontrar. Informe a nota máxima correta dessa banca.
 2. MODELO GERAL DE DISSERTAÇÃO ARGUMENTATIVA: avalie também pela estrutura clássica (introdução/tese, desenvolvimento, conclusão/proposta) e compare.
 
 Se receber imagens (manuscrito), transcreva fielmente ANTES de avaliar, preservando os erros originais.
@@ -1080,7 +1213,9 @@ Identifique pontos de atenção: fuga ao tema, ausência de tese, problemas de c
 RESPONDA APENAS com JSON válido, sem markdown, sem cercas, neste schema:
 {
   "transcricao": "...",
-  "nota_total": <número>, "nota_max": 24,
+  "nota_total": <número>,
+  "nota_max": <nota máxima da banca>,
+  "banca": "${bancaAtiva}",
   "veredito": "frase curta",
   "criterios": [{"nome":"...","nota":<n>,"max":<n>,"comentario":"..."}],
   "comparativo": "...",
@@ -1129,23 +1264,50 @@ RESPONDA APENAS com JSON válido, sem markdown, sem cercas, neste schema:
   function renderResultado(d) {
     const pct = Math.round((d.nota_total / d.nota_max) * 100);
 
-    // ─── MODO DEMO: só nota + veredito animador, sem mostrar erros ───
+    // ─── MODO DEMO ───
     if (modoDemo) {
+      const pos = d.positivo || {};
+      const neg = d.negativo || {};
       document.getElementById('resultado').innerHTML = `
         <div class="nota-banner">
           <div class="nota-num">${d.nota_total}<small>/${d.nota_max}</small></div>
           <div class="nota-info">
             <h2>${esc(d.veredito)}</h2>
-            <p>${pct}% da pontuação máxima · ${nota_desc(d.nota_total, d.nota_max)}</p>
+            <p>${pct}% da pontuação · Banca: ${esc(d.banca || getBancaAtiva())}</p>
           </div>
         </div>
-        <div class="demo-banner">
-          <span class="demo-pill">Versão de teste</span>
-          <h3>Essa foi só a sua nota. 👀</h3>
-          <p>No <strong>Método F. Lara</strong> completo você vê <strong>exatamente onde errou</strong>, a nota detalhada por critério da banca, os pontos de atenção e o texto marcado — tudo que separa a sua redação da nota mil.</p>
-          <button class="demo-cta" onclick="novaCorracao()">Quero a correção completa →</button>
+
+        <div class="card">
+          <div class="card-title">O que você já faz bem ✦</div>
+          <div class="demo-ponto positivo">
+            <div class="demo-ponto-titulo">✅ ${esc(pos.titulo || '')}</div>
+            <div class="demo-ponto-detalhe">${esc(pos.detalhe || '')}</div>
+            <div class="demo-ponto-cta">Com o Método F. Lara você potencializa ainda mais esse ponto e garante nota máxima neste critério.</div>
+          </div>
         </div>
-        <button class="btn-nova" onclick="novaCorracao()">← Testar outra redação</button>`;
+
+        <div class="card">
+          <div class="card-title">O que vai melhorar com o Método ✦</div>
+          <div class="demo-ponto negativo">
+            <div class="demo-ponto-titulo">📌 ${esc(neg.titulo || '')}</div>
+            <div class="demo-ponto-detalhe">${esc(neg.detalhe || '')}</div>
+            <div class="demo-ponto-cta">A Prof.ª Fernanda vai te mostrar exatamente como resolver isso — e a diferença aparece na sua próxima redação.</div>
+          </div>
+        </div>
+
+        <div class="demo-banner">
+          <span class="demo-pill">Análise gratuita · Banca ${esc(d.banca || getBancaAtiva())}</span>
+          <h3>Quer ver tudo? Critério por critério, linha por linha. 👇</h3>
+          <p>A correção completa mostra <strong>cada ponto da banca</strong>, os erros marcados no texto, a nota detalhada e o comparativo com o modelo ideal — tudo que você precisa pra subir de patamar.</p>
+          <a class="demo-ig" href="https://instagram.com/felara_" target="_blank" rel="noopener">
+            <span class="demo-ig-icon">📲</span>
+            <span>
+              <strong>Fale com a Prof.ª Fernanda</strong><br>
+              <small>@felara_ no Instagram</small>
+            </span>
+          </a>
+          <button class="demo-cta" onclick="novaCorracao()">← Testar outra redação</button>
+        </div>`;
       document.getElementById('resultado').style.display = 'block';
       window.scrollTo({ top: document.querySelector('.work').offsetTop - 20, behavior: 'smooth' });
       return;
@@ -1172,7 +1334,7 @@ RESPONDA APENAS com JSON válido, sem markdown, sem cercas, neste schema:
         <div class="nota-info">
           <h2>${esc(d.veredito)}</h2>
           <p>${pct}% da pontuação máxima · ${nota_desc(d.nota_total, d.nota_max)}</p>
-          <p class="nota-fonte">Fonte: ${esc(d.edital_fonte || 'Base de conhecimento UFG')}</p>
+          <p class="nota-fonte">Banca: ${esc(d.banca || getBancaAtiva())} · Fonte: ${esc(d.edital_fonte || 'Base de conhecimento')}</p>
         </div>
       </div>
       <div class="card"><div class="card-title">Critérios de avaliação</div>${criteriosHtml}</div>
