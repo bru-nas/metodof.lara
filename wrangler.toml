@@ -1,3 +1,7 @@
 name = "metodoflara"
 main = "worker.js"
 compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "DEMO_KV"
+id = "81ff2e4f03b7446abd5a45f835b3ad41"
