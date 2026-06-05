@@ -1239,7 +1239,13 @@ RESPONDA APENAS com JSON válido, sem markdown, sem cercas, neste schema:
       if (!res.ok) throw new Error(`Erro da API (${res.status}): ${await res.text()}`);
 
       const data = await res.json();
+      console.log('API response:', JSON.stringify(data).slice(0, 500));
+
+      // verifica se a API retornou um erro
+      if (data.error) throw new Error('Erro da API Anthropic: ' + JSON.stringify(data.error));
+
       const rawText = (data.content || []).map(b => b.type === 'text' ? b.text : '').filter(Boolean).join('\n');
+      console.log('rawText:', rawText.slice(0, 300));
       const json = parseJSON(rawText);
       stopLoading();
       document.getElementById('loading').style.display = 'none';
@@ -1257,8 +1263,12 @@ RESPONDA APENAS com JSON válido, sem markdown, sem cercas, neste schema:
   function parseJSON(raw) {
     let text = raw.replace(/```json|```/gi, '').trim();
     const start = text.indexOf('{'), end = text.lastIndexOf('}');
-    if (start === -1 || end === -1) throw new Error('A IA não retornou JSON válido.');
-    return JSON.parse(text.slice(start, end + 1));
+    if (start === -1 || end === -1) throw new Error('JSON não encontrado na resposta.<br><br><small>Resposta recebida: <code>' + esc(text.slice(0, 300)) + '</code></small>');
+    try {
+      return JSON.parse(text.slice(start, end + 1));
+    } catch(e) {
+      throw new Error('JSON inválido: ' + e.message + '<br><br><small>Trecho: <code>' + esc(text.slice(start, start + 200)) + '</code></small>');
+    }
   }
 
   function renderResultado(d) {
