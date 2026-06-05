@@ -1232,7 +1232,7 @@ RESPONDA APENAS com JSON válido, sem markdown, sem cercas, neste schema:
         userContent.push({ type: 'text', text: `TEMA: ${tema}\n\nTEXTO DA REDAÇÃO:\n${document.getElementById('redacao-texto').value.trim()}\n\nAvalie e responda apenas com o JSON.` });
       }
 
-      const body = { model: 'claude-sonnet-4-20250514', max_tokens: 1000, system: systemPrompt, messages: [{ role: 'user', content: userContent }] };
+      const body = { model: 'claude-sonnet-4-5', max_tokens: 4000, system: systemPrompt, messages: [{ role: 'user', content: userContent }] };
       if (buscarEdital) body.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
 
       const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
