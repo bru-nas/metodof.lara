@@ -888,7 +888,7 @@
         <div class="gate-brand" style="margin-bottom:14px;">Seu teste já foi usado.</div>
         <p class="gate-msg" style="margin-bottom:10px;">Você já fez sua análise gratuita. <strong>Quer a correção completa?</strong></p>
         <p class="gate-sub" style="margin-bottom:26px;">Fale com a Prof.ª Fernanda e garanta seu acesso ao Método F. Lara.</p>
-        <a href="https://instagram.com/felara_" target="_blank" rel="noopener" style="
+        <a href="https://wa.me/5562965446294" target="_blank" rel="noopener" style="
           display:flex;align-items:center;gap:14px;
           background:linear-gradient(100deg,#833ab4,#fd1d1d,#fcb045);
           border-radius:14px;padding:16px 20px;text-decoration:none;color:#fff;
@@ -898,7 +898,7 @@
           <span style="font-size:28px;">📲</span>
           <span>
             <strong style="font-size:16px;display:block;">Falar com a Prof.ª Fernanda</strong>
-            <small style="font-size:13px;opacity:0.88;">@felara_ no Instagram</small>
+            <small style="font-size:13px;opacity:0.88;">WhatsApp · clique para conversar</small>
           </span>
         </a>`;
       return;
@@ -957,30 +957,6 @@
     atualizarTextosComBanca();
   }
 
-  function atualizarTextosComBanca() {
-    const banca = getBancaAtiva();
-    const bancas = carregarBancas();
-    const bancaObj = bancas.find(b => b.id === banca) || { nome: banca, desc: banca };
-
-    // hero
-    const heroNome = document.getElementById('hero-banca-nome');
-    const heroTag = document.getElementById('hero-banca-tag');
-    if (heroNome) heroNome.textContent = bancaObj.nome;
-    if (heroTag) heroTag.textContent = `✦ Correção inteligente sob os critérios oficiais ${bancaObj.nome}`;
-
-    // checkbox
-    const checkboxNome = document.getElementById('checkbox-banca-nome');
-    if (checkboxNome) checkboxNome.textContent = bancaObj.nome;
-
-    // label do formulário
-    const labelForm = document.getElementById('banca-label-form');
-    if (labelForm) labelForm.textContent = 'Banca: ' + bancaObj.nome;
-
-    // rodapé
-    const footerNome = document.getElementById('footer-banca-nome');
-    if (footerNome) footerNome.textContent = bancaObj.nome + (bancaObj.desc && bancaObj.desc !== bancaObj.nome ? ' · ' + bancaObj.desc : '');
-  }
-
   // ════════════════════════════════════════════════════════════
   // 🎯 BANCA ATIVA
   // ════════════════════════════════════════════════════════════
@@ -1001,6 +977,26 @@
 
   function getBancaAtiva() {
     return localStorage.getItem('flara_banca_ativa') || 'UFG';
+  }
+
+  function atualizarTextosComBanca() {
+    const banca = getBancaAtiva();
+    const bancas = carregarBancas();
+    const bancaObj = bancas.find(b => b.id === banca) || { nome: banca, desc: banca };
+
+    const heroNome = document.getElementById('hero-banca-nome');
+    const heroTag = document.getElementById('hero-banca-tag');
+    if (heroNome) heroNome.textContent = bancaObj.nome;
+    if (heroTag) heroTag.textContent = `✦ Correção inteligente sob os critérios oficiais ${bancaObj.nome}`;
+
+    const checkboxNome = document.getElementById('checkbox-banca-nome');
+    if (checkboxNome) checkboxNome.textContent = bancaObj.nome;
+
+    const labelForm = document.getElementById('banca-label-form');
+    if (labelForm) labelForm.textContent = 'Banca: ' + bancaObj.nome;
+
+    const footerNome = document.getElementById('footer-banca-nome');
+    if (footerNome) footerNome.textContent = bancaObj.nome + (bancaObj.desc && bancaObj.desc !== bancaObj.nome ? ' · ' + bancaObj.desc : '');
   }
 
   function setBancaAtiva(id) {
@@ -1172,9 +1168,11 @@
     document.getElementById('admin').style.display = 'none';
     document.getElementById('gate').style.display = 'none';
     document.body.classList.remove('gated');
+    atualizarTextosComBanca();
   }
 
   // (acesso ao admin agora é por 5 toques na logo)
+  window.addEventListener('DOMContentLoaded', atualizarTextosComBanca);
 
   let modo = 'upload';
   let imagens = [];
@@ -1252,80 +1250,17 @@
 
     try {
       const bancaAtiva = getBancaAtiva();
-      // Crivo fixo da UFG — Quadro 4 do edital oficial
-      const CRIVO_UFG = `CRIVO OFICIAL DA UFG (Quadro 4):
-- Adequação ao tema: 0 a 9 pontos
-- Adequação ao gênero textual: 0 a 5 pontos
-- Adequação à modalidade escrita (norma culta): 0 a 5 pontos
-- Coesão e coerência: 0 a 5 pontos
-TOTAL MÁXIMO: 24 pontos. A soma dos 4 critérios deve ser EXATAMENTE igual à nota_total.`;
 
-      const crivoInfo = bancaAtiva === 'UFG'
-        ? CRIVO_UFG
-        : `USE A BUSCA NA INTERNET para encontrar os critérios e pesos EXATOS e ATUAIS da banca ${bancaAtiva}.`;
-
-      const systemPrompt = modoDemo
-        ? `Você é um corretor especialista em redações de vestibular. A banca avaliada é: ${bancaAtiva}.
-
-${bancaAtiva === 'UFG' ? CRIVO_UFG : 'Busque os critérios oficiais da banca ' + bancaAtiva + '.'}
-
-Faça uma análise RÁPIDA (modo demonstração gratuita). Identifique apenas:
-- 1 ponto positivo genuíno (algo que o aluno já faz bem segundo o crivo da ${bancaAtiva})
-- 1 ponto negativo principal (o maior problema segundo o crivo da ${bancaAtiva})
-
-Mencione o nome do critério específico da ${bancaAtiva} no detalhe. Linguagem encorajadora para ensino médio.
-
-RESPONDA APENAS com JSON válido, sem markdown, sem cercas:
-{
-  "nota_total": <estimativa baseada nos critérios reais da ${bancaAtiva}>,
-  "nota_max": <nota máxima real da ${bancaAtiva}>,
-  "banca": "${bancaAtiva}",
-  "veredito": "frase curta encorajadora citando a banca ${bancaAtiva}",
-  "positivo": {"titulo": "título do ponto positivo", "detalhe": "cite o critério da ${bancaAtiva}"},
-  "negativo": {"titulo": "título do ponto a melhorar", "detalhe": "cite o critério da ${bancaAtiva}"}
-}`
-        : `Você é um corretor especialista em redações de vestibular. A banca avaliada é: ${bancaAtiva}.
-
-${crivoInfo}
-
-REGRAS OBRIGATÓRIAS — SIGA À RISCA:
-1. Use SOMENTE os critérios oficiais listados acima — não invente critérios.
-2. A nota de cada critério não pode ultrapassar o máximo daquele critério.
-3. A soma das notas dos critérios deve ser EXATAMENTE igual à nota_total.
-4. nota_total nunca ultrapassa nota_max.
-5. NÃO transcreva nem repita o texto da redação na resposta.
-6. Cite a banca ${bancaAtiva} e o critério específico em cada comentário.
-
-Se receber imagens (manuscrito), leia e avalie — mas NÃO transcreva o texto.
-
-Avalie sob DOIS olhares:
-1. CRIVO OFICIAL DA ${bancaAtiva}: use exatamente os critérios acima.
-2. MODELO GERAL DISSERTATIVO-ARGUMENTATIVO: tese, desenvolvimento, conclusão/proposta.
-
-Pontos de atenção: fuga ao tema, ausência de tese, problemas de coesão, desvios da norma culta, cópia de textos motivadores.
-
-RESPONDA APENAS com JSON válido, sem markdown, sem cercas:
-{
-  "nota_total": <soma exata das notas>,
-  "nota_max": <nota máxima real da ${bancaAtiva}>,
-  "banca": "${bancaAtiva}",
-  "veredito": "frase curta citando a banca ${bancaAtiva}",
-  "criterios": [{"nome":"nome exato do critério","nota":<n>,"max":<máximo do critério>,"comentario":"cite a ${bancaAtiva} e o critério"}],
-  "comparativo": "compare crivo ${bancaAtiva} vs modelo geral dissertativo",
-  "pontos_atencao": [{"titulo":"...","detalhe":"..."}],
-  "texto_marcado": "só os trechos problemáticos entre <<erro>>...<</erro>>",
-  "edital_fonte": "Quadro 4 do edital UFG" 
-}`;
-
+      // system prompt fica no Worker — aqui só mandamos os dados essenciais
       const userContent = [];
       if (modo === 'upload') {
         imagens.forEach(img => userContent.push({ type: 'image', source: { type: 'base64', media_type: img.mediaType, data: img.base64 } }));
-        userContent.push({ type: 'text', text: `TEMA: ${tema}\n\nAs imagens são o manuscrito. Avalie pelos critérios da banca ${bancaAtiva} e pelo modelo geral. Responda apenas com o JSON.` });
+        userContent.push({ type: 'text', text: `TEMA: ${tema}\n\nAvalie pelo crivo da banca ${bancaAtiva}. Responda apenas com o JSON.` });
       } else {
-        userContent.push({ type: 'text', text: `TEMA: ${tema}\n\nTEXTO DA REDAÇÃO:\n${document.getElementById('redacao-texto').value.trim()}\n\nAvalie pelos critérios da banca ${bancaAtiva} e pelo modelo geral. Responda apenas com o JSON.` });
+        userContent.push({ type: 'text', text: `TEMA: ${tema}\n\nTEXTO DA REDAÇÃO:\n${document.getElementById('redacao-texto').value.trim()}\n\nAvalie pelo crivo da banca ${bancaAtiva}. Responda apenas com o JSON.` });
       }
 
-      const body = { model: 'claude-sonnet-4-5', max_tokens: 4000, system: systemPrompt, messages: [{ role: 'user', content: userContent }] };
+      const body = { model: 'claude-sonnet-4-5', max_tokens: 4000, messages: [{ role: 'user', content: userContent }], _banca: bancaAtiva };
       if (modoDemo) body._demo = true;
       if (!modoDemo && alunoAtual) {
         body._senha = alunoAtual.senha;
@@ -1352,7 +1287,7 @@ RESPONDA APENAS com JSON válido, sem markdown, sem cercas:
           <div class="gate-brand" style="margin-bottom:14px;">Seu teste já foi usado.</div>
           <p class="gate-msg" style="margin-bottom:10px;">Você já fez sua análise gratuita. <strong>Quer a correção completa?</strong></p>
           <p class="gate-sub" style="margin-bottom:26px;">Fale com a Prof.ª Fernanda e garanta seu acesso ao Método F. Lara.</p>
-          <a href="https://instagram.com/felara_" target="_blank" rel="noopener" style="
+          <a href="https://wa.me/5562965446294" target="_blank" rel="noopener" style="
             display:flex;align-items:center;gap:14px;
             background:linear-gradient(100deg,#833ab4,#fd1d1d,#fcb045);
             border-radius:14px;padding:16px 20px;text-decoration:none;color:#fff;
@@ -1361,7 +1296,7 @@ RESPONDA APENAS com JSON válido, sem markdown, sem cercas:
             <span style="font-size:28px;">📲</span>
             <span>
               <strong style="font-size:16px;display:block;">Falar com a Prof.ª Fernanda</strong>
-              <small style="font-size:13px;opacity:0.88;">@felara_ no Instagram</small>
+              <small style="font-size:13px;opacity:0.88;">WhatsApp · clique para conversar</small>
             </span>
           </a>`;
         return;
@@ -1447,11 +1382,11 @@ RESPONDA APENAS com JSON válido, sem markdown, sem cercas:
           <span class="demo-pill">Análise gratuita · Banca ${esc(d.banca || getBancaAtiva())}</span>
           <h3>Quer ver tudo? Critério por critério, linha por linha. 👇</h3>
           <p>A correção completa mostra <strong>cada ponto da banca</strong>, os erros marcados no texto, a nota detalhada e o comparativo com o modelo ideal — tudo que você precisa pra subir de patamar.</p>
-          <a class="demo-ig" href="https://instagram.com/felara_" target="_blank" rel="noopener">
+          <a class="demo-ig" href="https://wa.me/5562965446294" target="_blank" rel="noopener">
             <span class="demo-ig-icon">📲</span>
             <span>
               <strong>Fale com a Prof.ª Fernanda</strong><br>
-              <small>@felara_ no Instagram</small>
+              <small>WhatsApp · clique para conversar</small>
             </span>
           </a>
           <button class="demo-cta" onclick="novaCorracao()">← Testar outra redação</button>
@@ -1518,7 +1453,7 @@ RESPONDA APENAS com JSON válido, sem markdown, sem cercas:
         <div class="gate-brand" style="margin-bottom:14px;">Gostou do que viu?</div>
         <p class="gate-msg" style="margin-bottom:10px;">Seu teste gratuito foi utilizado. <strong>Quer correção ilimitada?</strong></p>
         <p class="gate-sub" style="margin-bottom:26px;">Fale com a Prof.ª Fernanda e garanta seu acesso completo ao Método F. Lara.</p>
-        <a href="https://instagram.com/felara_" target="_blank" rel="noopener" style="
+        <a href="https://wa.me/5562965446294" target="_blank" rel="noopener" style="
           display:flex;align-items:center;gap:14px;
           background:linear-gradient(100deg,#833ab4,#fd1d1d,#fcb045);
           border-radius:14px;padding:16px 20px;text-decoration:none;color:#fff;
@@ -1527,7 +1462,7 @@ RESPONDA APENAS com JSON válido, sem markdown, sem cercas:
           <span style="font-size:28px;">📲</span>
           <span>
             <strong style="font-size:16px;display:block;">Falar com a Prof.ª Fernanda</strong>
-            <small style="font-size:13px;opacity:0.88;">@felara_ no Instagram</small>
+            <small style="font-size:13px;opacity:0.88;">WhatsApp · clique para conversar</small>
           </span>
         </a>`;
       window.scrollTo({ top: 0, behavior: 'smooth' });
