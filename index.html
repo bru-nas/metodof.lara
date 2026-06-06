@@ -1423,7 +1423,6 @@
       <div class="card"><div class="card-title">Critérios de avaliação · ${esc(d.banca || bancaAtiva)}</div>${criteriosHtml}</div>
       <div class="card"><div class="card-title">Crivo ${esc(d.banca || bancaAtiva)} × Modelo geral</div><div class="comparativo-texto">${esc(d.comparativo || '')}</div></div>
       <div class="card"><div class="card-title">Pontos de atenção</div>${pontosHtml}</div>
-      ${textoMarcado ? `<div class="card"><div class="card-title">Trechos que precisam de atenção</div><div class="texto-redacao">${textoMarcado}</div></div>` : ''}
       <button class="btn-nova" onclick="novaCorracao()">← Corrigir outra redação</button>`;
     document.getElementById('resultado').style.display = 'block';
     window.scrollTo({ top: document.querySelector('.work').offsetTop - 20, behavior: 'smooth' });
