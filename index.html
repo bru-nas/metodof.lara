@@ -1002,12 +1002,42 @@
     { id: 'IBFC',     nome: 'IBFC',     tipo: 'Concurso',   desc: 'Concursos públicos' },
   ];
 
+  function getBancaAtiva() {
+    return localStorage.getItem('flara_banca_ativa') || 'UFG';
+  }
+
+  function carregarBancas() {
+    try {
+      const extra = JSON.parse(localStorage.getItem('flara_bancas_custom') || '[]');
+      return [...BANCAS_DEFAULT, ...extra];
+    } catch { return BANCAS_DEFAULT; }
+  }
+
+  function atualizarTextosComBanca() {
+    const banca = getBancaAtiva();
+    const bancas = carregarBancas();
+    const bancaObj = bancas.find(b => b.id === banca) || { nome: banca, desc: banca };
+
+    const heroNome = document.getElementById('hero-banca-nome');
+    const heroTag = document.getElementById('hero-banca-tag');
+    if (heroNome) heroNome.textContent = bancaObj.nome;
+    if (heroTag) heroTag.textContent = `✦ Correção inteligente sob os critérios oficiais ${bancaObj.nome}`;
+
+    const checkboxNome = document.getElementById('checkbox-banca-nome');
+    if (checkboxNome) checkboxNome.textContent = bancaObj.nome;
+
+    const labelForm = document.getElementById('banca-label-form');
+    if (labelForm) labelForm.textContent = 'Banca: ' + bancaObj.nome;
+
+    const footerNome = document.getElementById('footer-banca-nome');
+    if (footerNome) footerNome.textContent = bancaObj.nome + (bancaObj.desc && bancaObj.desc !== bancaObj.nome ? ' · ' + bancaObj.desc : '');
+  }
+
   function renderBancaAluno() {
     const grid = document.getElementById('banca-aluno-grid');
     if (!grid) return;
     const ativa = getBancaAtiva();
     const bancas = carregarBancas();
-    // separa vestibulares e concursos
     const vest = bancas.filter(b => b.tipo === 'Vestibular' || !b.tipo);
     const conc = bancas.filter(b => b.tipo === 'Concurso');
     let html = '';
@@ -1034,35 +1064,6 @@
     localStorage.setItem('flara_banca_ativa', id);
     renderBancaAluno();
     atualizarTextosComBanca();
-  }
-    try {
-      const extra = JSON.parse(localStorage.getItem('flara_bancas_custom') || '[]');
-      return [...BANCAS_DEFAULT, ...extra];
-    } catch { return BANCAS_DEFAULT; }
-  }
-
-  function getBancaAtiva() {
-    return localStorage.getItem('flara_banca_ativa') || 'UFG';
-  }
-
-  function atualizarTextosComBanca() {
-    const banca = getBancaAtiva();
-    const bancas = carregarBancas();
-    const bancaObj = bancas.find(b => b.id === banca) || { nome: banca, desc: banca };
-
-    const heroNome = document.getElementById('hero-banca-nome');
-    const heroTag = document.getElementById('hero-banca-tag');
-    if (heroNome) heroNome.textContent = bancaObj.nome;
-    if (heroTag) heroTag.textContent = `✦ Correção inteligente sob os critérios oficiais ${bancaObj.nome}`;
-
-    const checkboxNome = document.getElementById('checkbox-banca-nome');
-    if (checkboxNome) checkboxNome.textContent = bancaObj.nome;
-
-    const labelForm = document.getElementById('banca-label-form');
-    if (labelForm) labelForm.textContent = 'Banca: ' + bancaObj.nome;
-
-    const footerNome = document.getElementById('footer-banca-nome');
-    if (footerNome) footerNome.textContent = bancaObj.nome + (bancaObj.desc && bancaObj.desc !== bancaObj.nome ? ' · ' + bancaObj.desc : '');
   }
 
   function setBancaAtiva(id) {
