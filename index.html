@@ -579,8 +579,17 @@
     opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 1200; max-width: 90%; text-align: center;
   }
 
-  /* banca */
-  .admin-banca-head {
+  /* banca aluno */
+  .banca-aluno-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap: 8px; margin-top: 4px; }
+  .banca-aluno-card {
+    border: 2px solid var(--rosa-borda); border-radius: 12px; padding: 12px 8px;
+    text-align: center; cursor: pointer; background: #fff; transition: all 0.18s;
+  }
+  .banca-aluno-card:hover { border-color: var(--rosa-vivo); transform: translateY(-1px); }
+  .banca-aluno-card.sel { border-color: var(--magenta); background: rgba(156,15,72,0.06); }
+  .banca-aluno-card-nome { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 700; color: var(--vinho); }
+  .banca-aluno-card.sel .banca-aluno-card-nome { color: var(--magenta); }
+  .banca-aluno-card-tipo { font-size: 10px; color: var(--texto-suave); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
     font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
     color: var(--magenta); margin: 28px 0 12px;
   }
@@ -748,14 +757,21 @@
   <main class="work">
     <div class="panel" id="form-area">
 
-      <div class="step-num"><span>1</span> Cole o tema da redação</div>
+      <div class="step-num"><span>1</span> Selecione a banca</div>
+      <div class="form-section">
+        <label class="form-label">Para qual banca você quer corrigir?</label>
+        <span class="form-hint">Escolha o vestibular ou concurso — a IA vai buscar os critérios oficiais</span>
+        <div class="banca-aluno-grid" id="banca-aluno-grid"></div>
+      </div>
+
+      <div class="step-num"><span>2</span> Cole o tema da redação</div>
       <div class="form-section">
         <label class="form-label" for="tema">Tema proposto</label>
         <span class="form-hint">O enunciado ou a proposta que você recebeu · <span id="banca-label-form" style="color:var(--magenta);font-weight:700;"></span></span>
         <textarea id="tema" rows="3" placeholder="Ex: A crise hídrica no Brasil e seus impactos sociais..."></textarea>
       </div>
 
-      <div class="step-num"><span>2</span> Envie sua redação</div>
+      <div class="step-num"><span>3</span> Envie sua redação</div>
       <div class="form-section">
         <div class="toggle-group">
           <button class="toggle-btn active" id="btn-upload" onclick="setMode('upload')">📷 Foto do manuscrito</button>
@@ -955,20 +971,70 @@
     setTimeout(() => { gate.style.display = 'none'; }, 500);
     document.body.classList.remove('gated');
     atualizarTextosComBanca();
+    renderBancaAluno();
   }
 
   // ════════════════════════════════════════════════════════════
   // 🎯 BANCA ATIVA
   // ════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════
+  // 📚 BANCAS — lista completa (vestibulares + concursos)
+  // ════════════════════════════════════════════════════════════
   const BANCAS_DEFAULT = [
-    { id: 'UFG',  nome: 'UFG',  desc: 'CS-UFG · 24 pts' },
-    { id: 'UEG',  nome: 'UEG',  desc: 'Vest. Estadual GO' },
-    { id: 'ENEM', nome: 'ENEM', desc: '5 competências · 1000 pts' },
-    { id: 'FUVEST', nome: 'FUVEST', desc: 'Vest. USP' },
-    { id: 'UNICAMP', nome: 'UNICAMP', desc: 'Vest. Unicamp' },
+    // Vestibulares
+    { id: 'ENEM',     nome: 'ENEM',     tipo: 'Vestibular', desc: '5 competências · 1000 pts' },
+    { id: 'FUVEST',   nome: 'FUVEST',   tipo: 'Vestibular', desc: 'USP' },
+    { id: 'UNICAMP',  nome: 'UNICAMP',  tipo: 'Vestibular', desc: 'Unicamp' },
+    { id: 'UNESP',    nome: 'UNESP',    tipo: 'Vestibular', desc: 'VUNESP' },
+    { id: 'UFG',      nome: 'UFG',      tipo: 'Vestibular', desc: 'CS-UFG · 24 pts' },
+    { id: 'UEG',      nome: 'UEG',      tipo: 'Vestibular', desc: 'Goiás' },
+    { id: 'UnB',      nome: 'UnB',      tipo: 'Vestibular', desc: 'CEBRASPE' },
+    { id: 'UFRJ',     nome: 'UFRJ',     tipo: 'Vestibular', desc: 'Rio de Janeiro' },
+    { id: 'UFMG',     nome: 'UFMG',     tipo: 'Vestibular', desc: 'Minas Gerais' },
+    { id: 'UFRGS',    nome: 'UFRGS',    tipo: 'Vestibular', desc: 'Rio Grande do Sul' },
+    // Concursos
+    { id: 'CEBRASPE', nome: 'CEBRASPE', tipo: 'Concurso',   desc: 'ex-CESPE' },
+    { id: 'FGV',      nome: 'FGV',      tipo: 'Concurso',   desc: 'Fundação Getulio Vargas' },
+    { id: 'FCC',      nome: 'FCC',      tipo: 'Concurso',   desc: 'Fund. Carlos Chagas' },
+    { id: 'VUNESP',   nome: 'VUNESP',   tipo: 'Concurso',   desc: 'UNESP / concursos' },
+    { id: 'CESGRANRIO', nome: 'CESGRANRIO', tipo: 'Concurso', desc: 'Petrobras / BB' },
+    { id: 'AOCP',     nome: 'AOCP',     tipo: 'Concurso',   desc: 'Concursos públicos' },
+    { id: 'IBFC',     nome: 'IBFC',     tipo: 'Concurso',   desc: 'Concursos públicos' },
   ];
 
-  function carregarBancas() {
+  function renderBancaAluno() {
+    const grid = document.getElementById('banca-aluno-grid');
+    if (!grid) return;
+    const ativa = getBancaAtiva();
+    const bancas = carregarBancas();
+    // separa vestibulares e concursos
+    const vest = bancas.filter(b => b.tipo === 'Vestibular' || !b.tipo);
+    const conc = bancas.filter(b => b.tipo === 'Concurso');
+    let html = '';
+    if (vest.length) {
+      html += `<div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--magenta);margin:8px 0 4px;">Vestibulares</div>`;
+      html += vest.map(b => `
+        <div class="banca-aluno-card ${b.id === ativa ? 'sel' : ''}" onclick="selecionarBancaAluno('${b.id}')">
+          <div class="banca-aluno-card-nome">${b.nome}</div>
+          <div class="banca-aluno-card-tipo">${b.desc || ''}</div>
+        </div>`).join('');
+    }
+    if (conc.length) {
+      html += `<div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--magenta);margin:12px 0 4px;">Concursos</div>`;
+      html += conc.map(b => `
+        <div class="banca-aluno-card ${b.id === ativa ? 'sel' : ''}" onclick="selecionarBancaAluno('${b.id}')">
+          <div class="banca-aluno-card-nome">${b.nome}</div>
+          <div class="banca-aluno-card-tipo">${b.desc || ''}</div>
+        </div>`).join('');
+    }
+    grid.innerHTML = html;
+  }
+
+  function selecionarBancaAluno(id) {
+    localStorage.setItem('flara_banca_ativa', id);
+    renderBancaAluno();
+    atualizarTextosComBanca();
+  }
     try {
       const extra = JSON.parse(localStorage.getItem('flara_bancas_custom') || '[]');
       return [...BANCAS_DEFAULT, ...extra];
@@ -1239,6 +1305,7 @@
     const buscarEdital = document.getElementById('buscar-edital').checked;
 
     if (!tema) { alert('Por favor, informe o tema da redação.'); return; }
+    if (!getBancaAtiva()) { alert('Por favor, selecione a banca.'); return; }
     if (modo === 'upload' && imagens.length === 0) { alert('Adicione ao menos uma foto da redação.'); return; }
     if (modo === 'texto' && !document.getElementById('redacao-texto').value.trim()) { alert('Cole o texto da redação.'); return; }
 
