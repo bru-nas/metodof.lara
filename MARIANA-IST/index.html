@@ -13,6 +13,7 @@
   --bg:#E7EEF3; --card:#FFFFFF; --ink:#13293D; --muted:#566879; --line:#D3DEE6;
   --accent:#1B6CA8; --accent-ink:#FFFFFF; --chip:#EAF2F8;
   --good:#1D7A57; --good-bg:#E3F3EC; --bad:#B2392B; --bad-bg:#FBE9E6;
+  --gold:#F5B700; --gold-bg:#FFF4D1; --gold-ink:#5C4300;
   --font-display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
   --font-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
 }
@@ -20,14 +21,14 @@
   :root:not([data-theme="light"]){
     --bg:#0C1823; --card:#152736; --ink:#E8F0F6; --muted:#9DB1C1; --line:#27404F;
     --accent:#6CB4EE; --accent-ink:#082033; --chip:#1E3546;
-    --good:#58C79A; --good-bg:#12372B; --bad:#F08A7B; --bad-bg:#3C1E1B;
+    --good:#58C79A; --good-bg:#12372B; --bad:#F08A7B; --bad-bg:#3C1E1B; --gold:#F5B700; --gold-bg:#3A2D05; --gold-ink:#FFE08A;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0C1823; --card:#152736; --ink:#E8F0F6; --muted:#9DB1C1; --line:#27404F;
   --accent:#6CB4EE; --accent-ink:#082033; --chip:#1E3546;
-  --good:#58C79A; --good-bg:#12372B; --bad:#F08A7B; --bad-bg:#3C1E1B;
+  --good:#58C79A; --good-bg:#12372B; --bad:#F08A7B; --bad-bg:#3C1E1B; --gold:#F5B700; --gold-bg:#3A2D05; --gold-ink:#FFE08A;
   color-scheme:dark;
 }
 html,body{height:100%}
@@ -93,6 +94,18 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .msg.t{align-self:flex-start;color:var(--muted);font-size:14px;padding:2px 6px}
 .copts{flex:none;display:flex;flex-direction:column;gap:8px;background:var(--card);border-top:1px solid var(--line);padding-top:12px;padding-bottom:max(12px,env(safe-area-inset-bottom,0px))}
 .opt[disabled]{opacity:.45;cursor:default;border-style:dashed}
+.prize{border:2px solid var(--gold);background:var(--gold-bg);color:var(--gold-ink);border-radius:14px;padding:10px 14px;display:flex;flex-direction:column;gap:2px}
+.prize b{font-family:var(--font-display);font-size:19px}
+.clk{font-variant-numeric:tabular-nums;font-weight:700;font-size:22px}
+.doc{flex:1;min-height:0;overflow:auto;background:var(--card);padding-top:16px;padding-bottom:14px;display:flex;flex-direction:column;gap:12px}
+.doc h3{margin:6px 0 0;font-family:var(--font-display);font-size:18px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.sum{border-collapse:separate;border-spacing:0;min-width:560px;width:100%;font-size:14px;line-height:1.35}
+.sum th,.sum td{padding:9px 10px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+.sum thead th{background:var(--accent);color:var(--accent-ink);font-family:var(--font-display);font-size:15px}
+.sum tbody th{position:sticky;left:0;background:var(--chip);width:96px;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.sum tr:last-child th,.sum tr:last-child td{border-bottom:0}
+.steps{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px}
 </style>
 
 </head>
@@ -285,9 +298,62 @@ function confetti(cv) {
   })(t0);
 }
 
+var SUM = {
+  cols: ["Gonorreia", "Clamídia", "Tricomoníase"],
+  rows: [
+    ["Agente", ["<i>Neisseria gonorrhoeae</i> (bactéria)", "<i>Chlamydia trachomatis</i> (bactéria)", "<i>Trichomonas vaginalis</i> (protozoário)"]],
+    ["Transmissão", ["Sexo vaginal, anal ou oral sem preservativo. Também da mãe para o bebê no parto.", "Sexo vaginal, anal ou oral sem preservativo. Também da mãe para o bebê no parto.", "Sexo sem preservativo, principalmente vaginal."]],
+    ["Manifestações", ["Corrimento e ardência ao urinar. Muitas mulheres não têm sintomas.", "Costuma ser silenciosa. Pode dar corrimento e dor pélvica.", "Corrimento amarelo-esverdeado, espumoso, com odor e coceira."]],
+    ["Diagnóstico", ["Teste molecular.", "Teste molecular.", "Exame a fresco ou teste molecular."]],
+    ["Tratamento", ["Ceftriaxona 500 mg IM + azitromicina 1 g VO, dose única.", "Azitromicina 1 g VO, dose única.", "Metronidazol, conforme o protocolo do Ministério da Saúde."]]
+  ]
+};
+var CONDUTA = [
+  "Acolher com privacidade e sem julgamento.",
+  "Fazer anamnese completa e exame especular, avaliando sinais de DIP.",
+  "Oferecer os testes de clamídia, gonococo e tricomonas e os testes rápidos de HIV, sífilis e hepatites B e C.",
+  "Tratar conforme o agente, ainda na consulta.",
+  "Tratar a parceria ao mesmo tempo, mesmo sem sintomas.",
+  "Manter abstinência até 7 dias depois do tratamento.",
+  "Agendar o retorno e repetir testes se a exposição foi recente (janela imunológica).",
+  "Reforçar a prevenção combinada: preservativo, testagem regular e vacinação quando indicada.",
+  "Sem tratamento, gonorreia e clamídia podem causar DIP, infertilidade e gravidez ectópica."
+];
+
+function prizeHtml() {
+  if (state.wrongN === 0) {
+    return '<div class="prize"><b>Você acertou todas de primeira!</b><span>Mostre esta tela para a gente e ganhe seu brinde.</span><time id="clk" class="clk"></time></div>';
+  }
+  return '<p class="muted">Você errou ' + state.wrongN + (state.wrongN === 1 ? " vez" : " vezes") + ' no caminho. Quem acerta todas de primeira ganha um brinde. Quer tentar de novo?</p>';
+}
+
+function summaryHtml() {
+  var th = SUM.cols.map(function (c) { return "<th>" + c + "</th>"; }).join("");
+  var tr = SUM.rows.map(function (r) {
+    return '<tr><th scope="row">' + r[0] + "</th>" + r[1].map(function (t) { return "<td>" + t + "</td>"; }).join("") + "</tr>";
+  }).join("");
+  var steps = CONDUTA.map(function (t) { return "<li>" + t + "</li>"; }).join("");
+  return '<div class="doc gut"><p class="eyebrow">Resumo para guardar</p><h2>Gonorreia, clamídia e tricomoníase</h2>' +
+    '<p class="muted">Tire um print desta tela para guardar.</p>' +
+    '<div class="tablewrap"><table class="sum"><thead><tr><th></th>' + th + "</tr></thead><tbody>" + tr + "</tbody></table></div>" +
+    '<h3>Conduta no atendimento</h3><ol class="steps">' + steps + "</ol>" +
+    '<div class="refs"><b>Referências</b>' +
+    "<p>BRASIL. Ministério da Saúde. <b>Protocolo Clínico e Diretrizes Terapêuticas para Atenção Integral às Pessoas com Infecções Sexualmente Transmissíveis (IST)</b>. Brasília: Ministério da Saúde, 2022.</p>" +
+    "<p>BRASIL. Ministério da Saúde. <b>Por que o monitoramento da resistência da gonorreia é importante para o SUS?</b> Brasília: Ministério da Saúde, 2023.</p></div></div>" +
+    '<div class="copts gut"><button class="btn" data-act="backend">Voltar</button><button class="btn alt" data-act="restart">Recomeçar</button></div>';
+}
+
 function afterRender() {
+  if (state.clk) { clearInterval(state.clk); state.clk = null; }
   if (state.view === "chat") { var box = document.getElementById("msgs"); if (box) box.scrollTop = box.scrollHeight; }
-  if (state.view === "end") setTimeout(function () { confetti(document.getElementById("conf")); }, 60);
+  if (state.view === "end") {
+    setTimeout(function () { confetti(document.getElementById("conf")); }, 60);
+    var clk = document.getElementById("clk");
+    if (clk) {
+      var tick = function () { clk.textContent = new Date().toLocaleTimeString("pt-BR"); };
+      tick(); state.clk = setInterval(tick, 1000);
+    }
+  }
 }
 var app = document.getElementById("app");
 
@@ -305,8 +371,7 @@ function overlay(i, canHide) {
     for (var n = 0; n < SCENES.length; n++) h += '<i class="' + (n <= i ? "on" : "") + '"></i>';
   }
   return '<div class="overlay gut">' + (show ? '<div class="progress" aria-hidden="true">' + h + "</div>" : "") +
-    '<div class="toprow">' + (show ? '<span class="chip">Vez do Aluno ' + SCENES[i].aluno + " · " + SCENES[i].tag + "</span>" : "<span></span>") +
-    "</div></div>";
+    "</div>";
 }
 
 function frame(imgKey, i, canHide, inner) {
@@ -323,12 +388,11 @@ function render() {
       '<button class="btn" data-act="start">Começar</button></div>';
   } else if (state.view === "end") {
     html = '<div class="pic"><img src="' + IMG.final + '" alt="' + ALT.final + '" onerror="this.onerror=null;this.src=\'' + IMG.abertura + '\'"><canvas id="conf" aria-hidden="true"></canvas></div><div class="panel gut">' +
-      '<p class="eyebrow">Fim da história</p><h2>Parabéns! Vocês ajudaram a Mariana!</h2>' +
-      '<div class="recap"><span>Acolher</span><span>Testar</span><span>Tratar</span><span>Tratar a parceria</span><span>Acompanhar</span></div>' +
-      '<div class="refs"><b>Referências</b>' +
-      "<p>BRASIL. Ministério da Saúde. <b>Protocolo Clínico e Diretrizes Terapêuticas para Atenção Integral às Pessoas com Infecções Sexualmente Transmissíveis (IST)</b>. Brasília: Ministério da Saúde, 2022.</p>" +
-      "<p>BRASIL. Ministério da Saúde. <b>Por que o monitoramento da resistência da gonorreia é importante para o SUS?</b> Brasília: Ministério da Saúde, 2023.</p></div>" +
+      '<p class="eyebrow">Fim da história</p><h2>Parabéns! Vocês ajudaram a Mariana!</h2>' + prizeHtml() +
+      '<button class="btn" data-act="summary">Ver o resumo para guardar</button>' +
       '<button class="btn alt" data-act="restart">Recomeçar</button></div>';
+  } else if (state.view === "summary") {
+    html = summaryHtml();
   } else if (state.view === "chat") {
     var c = state.chat, Lt = ["A", "B", "C"];
     var msgs = c.log.map(function (m) { return '<div class="msg ' + m.w + '">' + m.t + "</div>"; }).join("");
@@ -376,7 +440,9 @@ app.addEventListener("click", function (e) {
   else if (a === "back") go(state.i, "quiz");
   else if (a === "next") nextScene();
   else if (a === "ans") answer(parseInt(b.getAttribute("data-n"), 10));
-  else if (a === "restart") { state.order = {}; go(-1, "cover"); }
+  else if (a === "summary") go(SCENES.length, "summary");
+  else if (a === "backend") go(SCENES.length, "end");
+  else if (a === "restart") { state.order = {}; state.wrongN = 0; go(-1, "cover"); }
 });
 
 render();
